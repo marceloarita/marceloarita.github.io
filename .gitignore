@@ -1,0 +1,5 @@
+/.quarto/
+**/*.quarto_ipynb
+CONTEXT.md
+docs/CONTEXT.html
+_tmp/

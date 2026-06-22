@@ -1,0 +1,191 @@
+[
+  {
+    "objectID": "projects/timesfm-gasoline/index.html",
+    "href": "projects/timesfm-gasoline/index.html",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "",
+    "text": "Domain: Time Series\n  Industry: Oil & Gas\n  Keywords: Time Series, TimesFM, Zero-Shot Forecasting, XGBoost\n  Updated: Jun 2026"
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#why-gasoline-is-a-different-kind-of-problem",
+    "href": "projects/timesfm-gasoline/index.html#why-gasoline-is-a-different-kind-of-problem",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "Why gasoline is a different kind of problem",
+    "text": "Why gasoline is a different kind of problem\nEnergy demand has a reliable structure: daily peaks, weekly rhythms, seasonal swings. Gasoline demand doesn’t. There’s no meaningful hour-by-hour cycle — the data is weekly — and the annual seasonality, while real, is subtle enough to be obscured by week-to-week noise. On top of that, consumption is heavily influenced by factors a time series model simply cannot see: fuel prices, macroeconomic conditions, driving behavior, and — as 2020 demonstrated — global pandemics.\nThis makes gasoline a harder test for a zero-shot foundation model than energy demand. The question is the same: can TimesFM 2.5 outperform a naive baseline without any domain-specific training? But the bar is lower, the signal is weaker, and the failure modes are more likely to be structural."
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#the-dataset",
+    "href": "projects/timesfm-gasoline/index.html#the-dataset",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "The dataset",
+    "text": "The dataset\nThe data is U.S. Finished Motor Gasoline Product Supplied, published weekly by the EIA — 835 weeks from January 2010 through December 2025. Product supplied is a proxy for actual consumption: it measures how much gasoline leaves the distribution system each week.\n\nThe series shows a long-term plateau around 8,500–9,000 thousand barrels per day, a sharp drop during COVID-19 in 2020, and a modest recovery after. Annual seasonality exists — summer peaks are visible — but week-to-week variation is high enough to make the pattern hard to exploit without the right context window."
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#finding-the-right-context-without-a-natural-cycle",
+    "href": "projects/timesfm-gasoline/index.html#finding-the-right-context-without-a-natural-cycle",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "Finding the right context without a natural cycle",
+    "text": "Finding the right context without a natural cycle\nIn the energy project, context length was derived mathematically: align to the LCM of the patch size and the series’ natural cycles. Gasoline demand has no clean patch-aligned cycle to work from, so a different approach was needed — sweep across context lengths empirically and look for the elbow where gains stabilize.\n\nThe elbow is at 156 weeks — roughly 3 years. Scaled MAE drops sharply from 52w to 156w, then flattens. Going beyond 3 years adds memory overhead without meaningful improvement, and risks pulling in older regimes — pre-shale boom, pre-COVID — that no longer reflect current consumption patterns."
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#does-it-beat-the-naive-baseline",
+    "href": "projects/timesfm-gasoline/index.html#does-it-beat-the-naive-baseline",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "Does it beat the naive baseline?",
+    "text": "Does it beat the naive baseline?\nThe naive baseline for a weekly series is lag-52: repeat the same week from the previous year. It’s a strong baseline for seasonal data — and gasoline has enough annual seasonality to make it hard to beat consistently.\nTimesFM was evaluated on three consecutive years of out-of-sample data, with no retraining between years:\n\n\n\nYear\nModel\nMAPE\nScaled MAE\n\n\n\n\n2023\nNaive lag-52\n4.06%\n1.000\n\n\n2023\nTimesFM 156w\n3.34%\n0.820\n\n\n2024\nNaive lag-52\n3.73%\n1.000\n\n\n2024\nTimesFM 156w\n2.88%\n0.775\n\n\n2025\nNaive lag-52\n3.02%\n1.000\n\n\n2025\nTimesFM 156w\n2.79%\n0.920\n\n\n\nThree consecutive years, all below 1.0. For a zero-shot model on a series dominated by external factors, that’s a stronger result than expected."
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#can-a-residual-model-add-value",
+    "href": "projects/timesfm-gasoline/index.html#can-a-residual-model-add-value",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "Can a residual model add value?",
+    "text": "Can a residual model add value?\nAfter establishing the TimesFM baseline, the natural next question is whether a residual correction model can reduce the remaining error. Four candidates were evaluated on the 2014–2023 walk-forward residuals:\n\n\n\nModel\nR² (residual)\n\n\n\n\nXGBoost\n0.138\n\n\nLightGBM\n0.081\n\n\nElasticNet CV\n−0.024\n\n\nLasso CV\n−0.027\n\n\n\nXGBoost explains only 14% of the residual variance. Linear models fail entirely — negative R² — suggesting the relationship between available features and TimesFM’s errors is non-linear and sparse. The ensemble still improved results:\n\n\n\nModel\nMAPE\nScaled MAE\n\n\n\n\nNaive lag-52\n3.73%\n1.000\n\n\nTimesFM 156w\n2.88%\n0.775\n\n\nTFM + XGBoost residual\n2.73%\n0.735\n\n\n\nThe improvement is real but modest — a direct consequence of the low R² on residuals. The scatter below makes this visible: XGBoost predictions correlate weakly with actual residuals, and many weeks the correction moves in the wrong direction entirely.\n\nUnlike the energy project, where the residual had a clear weather-driven structure that XGBoost could exploit, here the noise is more fundamental. The errors are driven by behavior and macro factors that calendar and lag features cannot capture."
+  },
+  {
+    "objectID": "projects/timesfm-gasoline/index.html#what-this-tells-us",
+    "href": "projects/timesfm-gasoline/index.html#what-this-tells-us",
+    "title": "U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot",
+    "section": "What this tells us",
+    "text": "What this tells us\nTimesFM beat a strong naive baseline across three consecutive years on a noisy, externally-driven series — without retraining, without domain features, and without any knowledge of gasoline markets.\nThe harder finding is on the ensemble side. In the energy project, XGBoost corrected a systematic climatic bias and added measurable value. Here, TimesFM’s errors are largely unpredictable from available features. That’s not a failure of the model — it’s a property of the problem. Gasoline demand is harder to correct because the signal driving the errors isn’t in the data you have access to.\nThat distinction matters when deciding how to deploy foundation models in practice. For series with identifiable, correctable error structure — use the ensemble. For series where errors are macro-driven and opaque — the zero-shot model alone is likely your best option.\n\nCode and full analysis on GitHub."
+  },
+  {
+    "objectID": "projects/index.html",
+    "href": "projects/index.html",
+    "title": "Projects",
+    "section": "",
+    "text": "Time Series\n  \n\n    \n      Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data\n      \n        Python  ·  TimesFM  ·  SHAP\n      \n      \n        Zero-shot forecasting on 16 years of hourly PJM East grid data — beating a naive lag-24h baseline\n        across all context configurations, with residual analysis revealing systematic weather-driven bias.\n      \n    \n\n    \n      U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot\n      \n        Python  ·  TimesFM\n      \n      \n        Zero-shot forecasting with TimesFM 2.5 on weekly EIA gasoline data —\n        beating a naive lag-52 baseline across three consecutive out-of-sample years,\n        plus a residual ensemble analysis with XGBoost."
+  },
+  {
+    "objectID": "CONTEXT.html",
+    "href": "CONTEXT.html",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "This file is for Claude Code only. It is gitignored and should never be committed. It documents design decisions, formatting rules, and conventions for this Quarto portfolio.\n\n\n\n\nQuarto website, output to docs/ (GitHub Pages serves from there)\nTheme: flatly + custom.scss\nLanguage: English throughout (QMD content, navbar labels, meta fields)\n\n\n\n\n\nmarcelo-arita.github.io/\n├── _quarto.yml\n├── custom.scss\n├── index.qmd              ← home page\n├── profile.png            ← profile photo\n├── assets/\n│   ├── linkedin.png       ← social icon\n│   └── github.png         ← social icon\n├── CONTEXT.md             ← this file (gitignored)\n├── _tmp/                  ← staging area for new content (gitignored ideally)\n└── projects/\n    ├── index.qmd          ← projects listing, organized by domain\n    ├── timesfm-energy/\n    │   ├── index.qmd\n    │   └── images/\n    │       ├── grid-overview.png\n    │       ├── context-comparison.png\n    │       ├── shap-features.png\n    │       └── residual-temperature.png\n    └── timesfm-gasoline/\n        ├── index.qmd\n        └── images/\n            ├── series-overview.png\n            ├── context-sweep.png\n            ├── forecast-results.png\n            └── residual-scatter.png\nProject folder naming convention: &lt;model-or-method&gt;-&lt;topic&gt; (e.g. timesfm-gasoline, timesfm-energy). Image names must be descriptive — never image 1.png or generic names.\n\n\n\n\nwebsite:\n  title: \"Marcelo Arita\"   ← brand link, clicks go to home (index.qmd)\n  navbar:\n    left:\n      - href: projects/index.qmd\n        text: Projects\nNo explicit “Home” item — “Marcelo Arita” brand already serves that purpose.\n\n\n\n\nPandoc/Quarto collapses nested HTML (divs inside &lt;a&gt;, spans inside divs) into a single line of escaped text unless wrapped in a raw block. Any HTML with internal structure must use a {=html} block:\n```{=html}\n&lt;div class=\"...\"&gt;\n  &lt;span&gt;...&lt;/span&gt;\n&lt;/div&gt;\n```\nPlain &lt;div&gt; in markdown body → broken output.\nLinks inside {=html} blocks must use directory paths (timesfm-gasoline/), not .qmd or .html — Quarto does not rewrite hrefs inside raw blocks.\n\n\n\n\n\nOrganized by domain sections (e.g. Time Series, NLP)\nDomain label: .domain-label — 1.35rem, weight 600, dark color\nEach project: &lt;a class=\"project-row\"&gt; inside .project-list\nProject row contains: title, meta (tech tags only), one-line description\nNo status badge on the index\n\n```{=html}\n&lt;div class=\"domain-section\"&gt;\n  &lt;div class=\"domain-label\"&gt;Time Series&lt;/div&gt;\n  &lt;div class=\"project-list\"&gt;\n\n    &lt;a href=\"timesfm-energy/\" class=\"project-row\"&gt;\n      &lt;div class=\"project-row-title\"&gt;Project Title&lt;/div&gt;\n      &lt;div class=\"project-row-meta\"&gt;&lt;span&gt;Python · TimesFM · SHAP&lt;/span&gt;&lt;/div&gt;\n      &lt;div class=\"project-row-desc\"&gt;One-paragraph description.&lt;/div&gt;\n    &lt;/a&gt;\n\n  &lt;/div&gt;\n&lt;/div&gt;\n\n---\n\n## Project detail page (`projects/&lt;name&gt;/index.qmd`)\n\n### Frontmatter\n\n```yaml\n---\ntitle: \"Full project title\"\npage-layout: article\ntoc: true\ntoc-depth: 2\n---\n\n\nThree fields, each on its own line, wrapped in {=html}:\n```{=html}\n&lt;div class=\"project-meta\"&gt;\n  &lt;span&gt;&lt;strong&gt;Domain:&lt;/strong&gt; Time Series&lt;/span&gt;\n  &lt;span&gt;&lt;strong&gt;Industry:&lt;/strong&gt; Oil &amp; Gas&lt;/span&gt;\n  &lt;span&gt;&lt;strong&gt;Keywords:&lt;/strong&gt; Time Series, TimesFM, Zero-Shot Forecasting, XGBoost&lt;/span&gt;\n&lt;/div&gt;\n\nFields: `Domain`, `Industry`, `Keywords`, `Updated` (format: `Mon YYYY`, e.g. `Jun 2026`). No Status, Type, Tech Stack.\n\n### Images\n\n- Stored in `images/` subfolder of the project\n- Referenced as `![](images/filename.png)` — plain markdown, no `{=html}` needed\n- Source images from Notion: copy to `images/` with a descriptive rename, then delete from `_tmp/`\n\n---\n\n## Home page (`index.qmd`)\n\nLayout: photo + name side by side on top, bio paragraphs below in full width.\n\n```html\n```{=html}\n&lt;div class=\"profile-section\"&gt;\n  &lt;div class=\"profile-top\"&gt;\n    &lt;div class=\"profile-photo\"&gt;&lt;img src=\"profile.png\" alt=\"Marcelo Arita\"&gt;&lt;/div&gt;\n    &lt;div class=\"profile-header-text\"&gt;\n      &lt;p class=\"profile-name\"&gt;Marcelo Arita&lt;/p&gt;\n      &lt;p class=\"profile-location\"&gt;📍 Japan&lt;/p&gt;\n      &lt;div class=\"social-links\"&gt;\n        &lt;a href=\"...\"&gt;&lt;img src=\"assets/linkedin.png\" class=\"social-icon\" alt=\"LinkedIn\"&gt; LinkedIn&lt;/a&gt;\n        &lt;a href=\"...\"&gt;&lt;img src=\"assets/github.png\" class=\"social-icon\" alt=\"GitHub\"&gt; GitHub&lt;/a&gt;\n      &lt;/div&gt;\n    &lt;/div&gt;\n  &lt;/div&gt;\n  &lt;div class=\"profile-body\"&gt;\n    &lt;p class=\"profile-bio\"&gt;...&lt;/p&gt;\n  &lt;/div&gt;\n&lt;/div&gt;\n```\nNo CV link — the site itself is the CV.\n\n\n\n\n\n\n\n\nElement\nValue\n\n\n\n\nFont\nInter, system-ui fallback\n\n\nBody color\n#37352f (Notion dark)\n\n\nLink color\n#2e75cc\n\n\nh1\n2.2rem, weight 700, line-height 1.25, letter-spacing -0.02em\n\n\nh2\n1.2rem, weight 600, border-bottom #ebebeb\n\n\nDomain label\n1.35rem, weight 600\n\n\nTable header bg\n#ebebeb with !important\n\n\nTable header text\n#1e3a5f with !important\n\n\nTable rows\nodd = white, even = #f4f4f4, hover = #eaf0fb\n\n\nProject meta bg\n#f7f7f5, border #e8e8e6\n\n\nProject card bg\n#f7f7f5, border #e8e8e6, hover #f0f0ee\n\n\n\nBootstrap (flatly theme) overrides require !important on table header background-color and color.\nTried and rejected: pastel blue (DAF0F7, D5E3F0) on cards/meta — felt out of place. Settled on warm light gray.\n\n\n\n\n\nHeadings: sentence case only — “Why this problem is harder than it looks”\nOnly proper nouns and acronyms stay capitalized: TimesFM, XGBoost, SHAP, PJM, EIA, etc.\n\n\n\n\n\n\nTranslating content to Portuguese — everything is in English\nPutting images in a shared or loose folder — each project owns its images/\nUsing href=\"file.qmd\" inside {=html} blocks — use directory/ instead\nBare &lt;div&gt; in markdown body for anything with nested elements — always use {=html}\nStatus/Type/Tech Stack in meta block — removed by owner preference\nAdding a “Home” navbar item — brand name already links home\nCommitting CONTEXT.md or .quarto/ — both are gitignored"
+  },
+  {
+    "objectID": "CONTEXT.html#stack",
+    "href": "CONTEXT.html#stack",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Quarto website, output to docs/ (GitHub Pages serves from there)\nTheme: flatly + custom.scss\nLanguage: English throughout (QMD content, navbar labels, meta fields)"
+  },
+  {
+    "objectID": "CONTEXT.html#folder-structure",
+    "href": "CONTEXT.html#folder-structure",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "marcelo-arita.github.io/\n├── _quarto.yml\n├── custom.scss\n├── index.qmd              ← home page\n├── profile.png            ← profile photo\n├── assets/\n│   ├── linkedin.png       ← social icon\n│   └── github.png         ← social icon\n├── CONTEXT.md             ← this file (gitignored)\n├── _tmp/                  ← staging area for new content (gitignored ideally)\n└── projects/\n    ├── index.qmd          ← projects listing, organized by domain\n    ├── timesfm-energy/\n    │   ├── index.qmd\n    │   └── images/\n    │       ├── grid-overview.png\n    │       ├── context-comparison.png\n    │       ├── shap-features.png\n    │       └── residual-temperature.png\n    └── timesfm-gasoline/\n        ├── index.qmd\n        └── images/\n            ├── series-overview.png\n            ├── context-sweep.png\n            ├── forecast-results.png\n            └── residual-scatter.png\nProject folder naming convention: &lt;model-or-method&gt;-&lt;topic&gt; (e.g. timesfm-gasoline, timesfm-energy). Image names must be descriptive — never image 1.png or generic names."
+  },
+  {
+    "objectID": "CONTEXT.html#navbar",
+    "href": "CONTEXT.html#navbar",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "website:\n  title: \"Marcelo Arita\"   ← brand link, clicks go to home (index.qmd)\n  navbar:\n    left:\n      - href: projects/index.qmd\n        text: Projects\nNo explicit “Home” item — “Marcelo Arita” brand already serves that purpose."
+  },
+  {
+    "objectID": "CONTEXT.html#raw-html-rule-critical",
+    "href": "CONTEXT.html#raw-html-rule-critical",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Pandoc/Quarto collapses nested HTML (divs inside &lt;a&gt;, spans inside divs) into a single line of escaped text unless wrapped in a raw block. Any HTML with internal structure must use a {=html} block:\n```{=html}\n&lt;div class=\"...\"&gt;\n  &lt;span&gt;...&lt;/span&gt;\n&lt;/div&gt;\n```\nPlain &lt;div&gt; in markdown body → broken output.\nLinks inside {=html} blocks must use directory paths (timesfm-gasoline/), not .qmd or .html — Quarto does not rewrite hrefs inside raw blocks."
+  },
+  {
+    "objectID": "CONTEXT.html#projects-index-page-projectsindex.qmd",
+    "href": "CONTEXT.html#projects-index-page-projectsindex.qmd",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Organized by domain sections (e.g. Time Series, NLP)\nDomain label: .domain-label — 1.35rem, weight 600, dark color\nEach project: &lt;a class=\"project-row\"&gt; inside .project-list\nProject row contains: title, meta (tech tags only), one-line description\nNo status badge on the index\n\n```{=html}\n&lt;div class=\"domain-section\"&gt;\n  &lt;div class=\"domain-label\"&gt;Time Series&lt;/div&gt;\n  &lt;div class=\"project-list\"&gt;\n\n    &lt;a href=\"timesfm-energy/\" class=\"project-row\"&gt;\n      &lt;div class=\"project-row-title\"&gt;Project Title&lt;/div&gt;\n      &lt;div class=\"project-row-meta\"&gt;&lt;span&gt;Python · TimesFM · SHAP&lt;/span&gt;&lt;/div&gt;\n      &lt;div class=\"project-row-desc\"&gt;One-paragraph description.&lt;/div&gt;\n    &lt;/a&gt;\n\n  &lt;/div&gt;\n&lt;/div&gt;\n\n---\n\n## Project detail page (`projects/&lt;name&gt;/index.qmd`)\n\n### Frontmatter\n\n```yaml\n---\ntitle: \"Full project title\"\npage-layout: article\ntoc: true\ntoc-depth: 2\n---\n\n\nThree fields, each on its own line, wrapped in {=html}:\n```{=html}\n&lt;div class=\"project-meta\"&gt;\n  &lt;span&gt;&lt;strong&gt;Domain:&lt;/strong&gt; Time Series&lt;/span&gt;\n  &lt;span&gt;&lt;strong&gt;Industry:&lt;/strong&gt; Oil &amp; Gas&lt;/span&gt;\n  &lt;span&gt;&lt;strong&gt;Keywords:&lt;/strong&gt; Time Series, TimesFM, Zero-Shot Forecasting, XGBoost&lt;/span&gt;\n&lt;/div&gt;\n\nFields: `Domain`, `Industry`, `Keywords`, `Updated` (format: `Mon YYYY`, e.g. `Jun 2026`). No Status, Type, Tech Stack.\n\n### Images\n\n- Stored in `images/` subfolder of the project\n- Referenced as `![](images/filename.png)` — plain markdown, no `{=html}` needed\n- Source images from Notion: copy to `images/` with a descriptive rename, then delete from `_tmp/`\n\n---\n\n## Home page (`index.qmd`)\n\nLayout: photo + name side by side on top, bio paragraphs below in full width.\n\n```html\n```{=html}\n&lt;div class=\"profile-section\"&gt;\n  &lt;div class=\"profile-top\"&gt;\n    &lt;div class=\"profile-photo\"&gt;&lt;img src=\"profile.png\" alt=\"Marcelo Arita\"&gt;&lt;/div&gt;\n    &lt;div class=\"profile-header-text\"&gt;\n      &lt;p class=\"profile-name\"&gt;Marcelo Arita&lt;/p&gt;\n      &lt;p class=\"profile-location\"&gt;📍 Japan&lt;/p&gt;\n      &lt;div class=\"social-links\"&gt;\n        &lt;a href=\"...\"&gt;&lt;img src=\"assets/linkedin.png\" class=\"social-icon\" alt=\"LinkedIn\"&gt; LinkedIn&lt;/a&gt;\n        &lt;a href=\"...\"&gt;&lt;img src=\"assets/github.png\" class=\"social-icon\" alt=\"GitHub\"&gt; GitHub&lt;/a&gt;\n      &lt;/div&gt;\n    &lt;/div&gt;\n  &lt;/div&gt;\n  &lt;div class=\"profile-body\"&gt;\n    &lt;p class=\"profile-bio\"&gt;...&lt;/p&gt;\n  &lt;/div&gt;\n&lt;/div&gt;\n```\nNo CV link — the site itself is the CV."
+  },
+  {
+    "objectID": "CONTEXT.html#typography-colors-custom.scss",
+    "href": "CONTEXT.html#typography-colors-custom.scss",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Element\nValue\n\n\n\n\nFont\nInter, system-ui fallback\n\n\nBody color\n#37352f (Notion dark)\n\n\nLink color\n#2e75cc\n\n\nh1\n2.2rem, weight 700, line-height 1.25, letter-spacing -0.02em\n\n\nh2\n1.2rem, weight 600, border-bottom #ebebeb\n\n\nDomain label\n1.35rem, weight 600\n\n\nTable header bg\n#ebebeb with !important\n\n\nTable header text\n#1e3a5f with !important\n\n\nTable rows\nodd = white, even = #f4f4f4, hover = #eaf0fb\n\n\nProject meta bg\n#f7f7f5, border #e8e8e6\n\n\nProject card bg\n#f7f7f5, border #e8e8e6, hover #f0f0ee\n\n\n\nBootstrap (flatly theme) overrides require !important on table header background-color and color.\nTried and rejected: pastel blue (DAF0F7, D5E3F0) on cards/meta — felt out of place. Settled on warm light gray."
+  },
+  {
+    "objectID": "CONTEXT.html#writing-style",
+    "href": "CONTEXT.html#writing-style",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Headings: sentence case only — “Why this problem is harder than it looks”\nOnly proper nouns and acronyms stay capitalized: TimesFM, XGBoost, SHAP, PJM, EIA, etc."
+  },
+  {
+    "objectID": "CONTEXT.html#what-to-avoid",
+    "href": "CONTEXT.html#what-to-avoid",
+    "title": "Portfolio Context — Marcelo Arita",
+    "section": "",
+    "text": "Translating content to Portuguese — everything is in English\nPutting images in a shared or loose folder — each project owns its images/\nUsing href=\"file.qmd\" inside {=html} blocks — use directory/ instead\nBare &lt;div&gt; in markdown body for anything with nested elements — always use {=html}\nStatus/Type/Tech Stack in meta block — removed by owner preference\nAdding a “Home” navbar item — brand name already links home\nCommitting CONTEXT.md or .quarto/ — both are gitignored"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Marcelo Arita",
+    "section": "",
+    "text": "Marcelo Arita\n      📍 Japan\n      \n        \n           LinkedIn\n        \n        \n           GitHub\n        \n      \n    \n  \n  \n    \n      Data Scientist with 5 years of experience delivering data-driven solutions\n      in consulting environments across multiple industries — including retail, steel,\n      financial services, insurance, automotive, and subscription businesses.\n    \n    \n      My work spans the full analytics stack: from data engineering and predictive\n      modeling to AI-powered applications. I have led and contributed to projects\n      involving demand forecasting, churn prediction, dynamic pricing, LLM-based\n      chatbots, and cloud data infrastructure.\n    \n    \n      Currently working as Senior Data Scientist at\n      ChuraData (ちゅらデータ, Japan),\n      previously at\n      ADVISIA Analytics (Brazil).\n      In recent projects, I have been focused on the development, training, and evaluation\n      of LLM agents."
+  },
+  {
+    "objectID": "index.html#technical-skills",
+    "href": "index.html#technical-skills",
+    "title": "Marcelo Arita",
+    "section": "Technical Skills",
+    "text": "Technical Skills\nLanguages   Python (8+ years), SQL (5+ years)\nMachine Learning & Statistics   Scikit-learn, XGBoost, LightGBM, SciPy, Statsmodels, SHAP, Optuna\nAI Engineering   LangChain, LangGraph, RAG, Text2SQL\nData & Engineering   Pandas, NumPy, Azure Data Factory, ETL pipelines, PostgreSQL, SQL Server, MySQL\nCloud   Azure (Data Factory, Data Lake Gen2, OpenAI, DevOps, App Service) · AWS (EC2, S3, Lambda, Bedrock) · GCP (BigQuery, VertexAI, Gemini)\nVisualization & BI   Power BI, Qlik Sense, Plotly, Matplotlib, Seaborn"
+  },
+  {
+    "objectID": "index.html#education-certifications",
+    "href": "index.html#education-certifications",
+    "title": "Marcelo Arita",
+    "section": "Education & Certifications",
+    "text": "Education & Certifications\nDegree\nBachelor’s Degree in Mechanical Engineering — Escola Politécnica da USP (University of São Paulo, Brazil). Undergraduate thesis: machine learning predictive model for energy consumption forecasting in a shopping center, with 3 months of training and 9 months of validation.\nGoogle Cloud\n\nProfessional Cloud Architect (2023)\nProfessional Machine Learning Engineer (2022)\nProfessional Data Engineer (2022)\nAssociate Cloud Engineer (2022)\n\nReinforcement Learning — University of Alberta\n\nPrediction and Control with Function Approximation (2026)\nSample-based Learning Methods (2025)\nFundamentals of Reinforcement Learning (2025)\n\nAI & Machine Learning\n\nAI and Machine Learning Algorithms and Techniques — Microsoft (2025)\nFoundations of AI and Machine Learning — Microsoft (2025)\nDeep Learning A-Z 2024: Neural Networks, AI & ChatGPT — Udemy (2025)\nLangGraph: Develop LLM Powered AI Agents — Udemy (2024)\nLangChain: Develop LLM Powered Applications — Udemy (2024)\nStatistics for Business Analytics and Data Science — Udemy (2024)\nMachine Learning A-Z: AI, Python & R — Udemy (2021)\n\nLanguage\n\nJLPT N1 — Japanese Language Proficiency Test (2014)"
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html",
+    "href": "projects/timesfm-energy/index.html",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "",
+    "text": "Domain: Time Series\n  Industry: Energy & Utilities\n  Keywords: Time Series, TimesFM, Zero-Shot Forecasting, XGBoost, SHAP\n  Updated: Jun 2026"
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#why-this-problem-is-harder-than-it-looks",
+    "href": "projects/timesfm-energy/index.html#why-this-problem-is-harder-than-it-looks",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "Why this problem is harder than it looks",
+    "text": "Why this problem is harder than it looks\nPredicting electricity demand hour by hour sounds straightforward — the data is regular, the patterns are visible, and grids have been doing this for decades. But the difficulty is in the details. A single heat wave can push demand up by thousands of megawatts in hours. A holiday shifts the entire daily profile. An extreme weather event like a hurricane can collapse consumption overnight.\nThe standard solution is a dedicated model trained on historical data from the specific grid you care about. It works well — but it requires data, time, and ongoing maintenance for every new series you add.\nI wanted to test a different approach: skip the training entirely, hand a pre-trained foundation model some recent history, and see if it could produce useful forecasts out of the box."
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#timesfm-and-the-zero-shot-premise",
+    "href": "projects/timesfm-energy/index.html#timesfm-and-the-zero-shot-premise",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "TimesFM and the zero-shot premise",
+    "text": "TimesFM and the zero-shot premise\nTimesFM 2.5 (Time Series Foundational Model) is a foundation model from Google Research, pre-trained on hundreds of billions of time series points across diverse domains — energy, retail, finance, weather. The premise is the same as modern LLMs: train on enough diverse data and the model learns patterns that generalize to new domains without retraining.\nIn practice, this means you give it a window of recent history as context, and it returns a forecast. No fine-tuning. No domain-specific features. No knowledge of what a power grid is.\nThe honest prior going in: a model with no energy-specific training should capture general temporal patterns reasonably well — daily and weekly cycles are not unique to power grids. Whether it could beat even a naive baseline was less obvious."
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#years-of-a-power-grid",
+    "href": "projects/timesfm-energy/index.html#years-of-a-power-grid",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "16 years of a power grid",
+    "text": "16 years of a power grid\nThe dataset is hourly load data from the PJM East grid — the electrical network serving the northeastern United States, from 2002 to 2018. Strong daily cycles, clear weekly rhythms, pronounced annual seasonality driven by heating and cooling demand.\n\nOne data quality issue worth addressing before modeling: Hurricane Sandy in October 2012 caused a sharp sustained drop in consumption across the region. Rather than letting that anomaly distort the model’s context window, those hours were replaced with historical averages for the same hour and day of week from the three prior years — preserving continuity without ignoring the event."
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#how-much-context-does-the-model-need",
+    "href": "projects/timesfm-energy/index.html#how-much-context-does-the-model-need",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "How much context does the model need?",
+    "text": "How much context does the model need?\nTimesFM processes input as fixed-size patches of 32 points. This has a direct implication for input design: context length should align with the series’ natural cycles to avoid cutting them mid-patch. For hourly energy data with daily (24h) and weekly (168h) cycles, the mathematically clean choice is LCM(32, 24, 168) = 672 hours — four weeks of fully aligned history.\nThree context lengths were evaluated against a naive baseline — repeat the same hour from the previous day — using walk-forward validation over the first 7 months of 2018:\n\n\n\nContext\nMAPE\nScaled MAE\n\n\n\n\nNaive lag-24h\n7.91%\n1.000\n\n\n512h (~3 weeks)\n4.74%\n0.630\n\n\n672h (~4 weeks, cycle-aligned)\n4.63%\n0.616\n\n\n8,736h (1 year)\n4.44%\n0.580\n\n\n\nScaled MAE below 1.0 means the model beats the naive baseline. All three configurations did.\nThe bigger insight is in the pattern across context lengths. Cycle alignment helps modestly. The real gain comes from a full year of history — with 8,736 hours of context, the model can see that January 2018 should look like January 2017. That’s a pattern no three-week window can capture."
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#where-the-model-fails-weather",
+    "href": "projects/timesfm-energy/index.html#where-the-model-fails-weather",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "Where the model fails: weather",
+    "text": "Where the model fails: weather\nA 4.44% MAPE is a solid result for a zero-shot model. The more interesting question is where the remaining error comes from. Training an XGBoost model on TimesFM’s residuals — using weather and calendar features — and analyzing it with SHAP gives a clear answer.\n\nThe three most important features are all weather-derived: humidity, apparent temperature, and temperature. Calendar features barely register. TimesFM already handles temporal structure well — it has internalized weekdays, weekends, and seasonal patterns from pre-training. What it cannot account for is current weather conditions.\nOn days above 25°C, the mean residual is +1,331 MW — the model consistently underestimates actual consumption. Air conditioning on hot days pushes demand beyond what historical temporal patterns suggest, and there’s no mechanism in a pure time series model to capture that.\n\nThe residual vs temperature scatter makes this visible: as temperatures rise above ~22°C, errors shift systematically upward. XGBoost learned to correct for this — but the correction was modest. Adding it reduced the hot-day residual from +1,331 MW to +1,235 MW and improved Scaled MAE from 0.580 to 0.562. The bottleneck was data volume: roughly 520 hours above 25°C in the training window, too few to learn the correction reliably."
+  },
+  {
+    "objectID": "projects/timesfm-energy/index.html#what-this-tells-us-about-foundation-models",
+    "href": "projects/timesfm-energy/index.html#what-this-tells-us-about-foundation-models",
+    "title": "Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data",
+    "section": "What this tells us about foundation models",
+    "text": "What this tells us about foundation models\nTimesFM outperformed the naive baseline across all configurations — on a domain it was never explicitly trained for, with no fine-tuning and no energy-specific features. That result holds up.\nThe more useful finding is about failure modes. The model doesn’t fail randomly — it fails systematically, in predictable regimes. That predictability matters more than it might seem: it means errors can be diagnosed and corrected with targeted interventions rather than retraining the entire model. The ensemble added value not because XGBoost predicted residuals well (R² = 0.034) but because it corrected a consistent directional bias in a specific climate regime.\nZero-shot time series models are not a replacement for domain expertise. But as a starting point — especially when historical data is limited or you’re forecasting across many series — they’re further along than expected.\nOne caveat worth noting: the PJM East dataset is publicly available and widely used in the time series literature, so there is a possibility that part of this data was included in TimesFM 2.5’s pre-training corpus. For a rigorous scientific benchmark, that would be a relevant limitation. The goal here is educational — to explore model behavior, validate intuitions about input engineering, and understand where the ensemble approach adds value and where it doesn’t. Results should be interpreted in that context.\n\nCode and full analysis on GitHub."
+  }
+]

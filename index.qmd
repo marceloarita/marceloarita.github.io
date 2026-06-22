@@ -1,0 +1,98 @@
+---
+title: ""
+page-layout: article
+toc: false
+---
+
+```{=html}
+<div class="profile-section">
+  <div class="profile-top">
+    <div class="profile-photo">
+      <img src="profile.png" alt="Marcelo Arita">
+    </div>
+    <div class="profile-header-text">
+      <p class="profile-name">Marcelo Arita</p>
+      <p class="profile-location">📍 Japan</p>
+      <div class="social-links">
+        <a href="https://br.linkedin.com/in/marcelo-arita" target="_blank">
+          <img src="assets/linkedin.png" class="social-icon" alt="LinkedIn"> LinkedIn
+        </a>
+        <a href="https://github.com/marceloarita" target="_blank">
+          <img src="assets/github.png" class="social-icon" alt="GitHub"> GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="profile-body">
+    <p class="profile-bio">
+      Data Scientist with 5 years of experience delivering data-driven solutions
+      in consulting environments across multiple industries — including retail, steel,
+      financial services, insurance, automotive, and subscription businesses.
+    </p>
+    <p class="profile-bio">
+      My work spans the full analytics stack: from data engineering and predictive
+      modeling to AI-powered applications. I have led and contributed to projects
+      involving demand forecasting, churn prediction, dynamic pricing, LLM-based
+      chatbots, and cloud data infrastructure.
+    </p>
+    <p class="profile-bio">
+      Currently working as Senior Data Scientist at
+      <a href="https://churadata.okinawa/" target="_blank">ChuraData (ちゅらデータ, Japan)</a>,
+      previously at
+      <a href="https://advisiaanalytics.com.br/home/" target="_blank">ADVISIA Analytics (Brazil)</a>.
+      In recent projects, I have been focused on the development, training, and evaluation
+      of LLM agents.
+    </p>
+  </div>
+</div>
+```
+
+## Technical Skills
+
+**Languages** &nbsp; Python (8+ years), SQL (5+ years)
+
+**Machine Learning & Statistics** &nbsp; Scikit-learn, XGBoost, LightGBM, SciPy, Statsmodels, SHAP, Optuna
+
+**AI Engineering** &nbsp; LangChain, LangGraph, RAG, Text2SQL
+
+**Data & Engineering** &nbsp; Pandas, NumPy, Azure Data Factory, ETL pipelines, PostgreSQL, SQL Server, MySQL
+
+**Cloud** &nbsp; Azure (Data Factory, Data Lake Gen2, OpenAI, DevOps, App Service) · AWS (EC2, S3, Lambda, Bedrock) · GCP (BigQuery, VertexAI, Gemini)
+
+**Visualization & BI** &nbsp; Power BI, Qlik Sense, Plotly, Matplotlib, Seaborn
+
+---
+
+## Education & Certifications
+
+**Degree**
+
+Bachelor's Degree in Mechanical Engineering — Escola Politécnica da USP (University of São Paulo, Brazil).
+Undergraduate thesis: machine learning predictive model for energy consumption forecasting in a shopping center, with 3 months of training and 9 months of validation.
+
+**Google Cloud**
+
+- Professional Cloud Architect (2023)
+- Professional Machine Learning Engineer (2022)
+- Professional Data Engineer (2022)
+- Associate Cloud Engineer (2022)
+
+**Reinforcement Learning** — University of Alberta
+
+- Prediction and Control with Function Approximation (2026)
+- Sample-based Learning Methods (2025)
+- Fundamentals of Reinforcement Learning (2025)
+
+**AI & Machine Learning**
+
+- AI and Machine Learning Algorithms and Techniques — Microsoft (2025)
+- Foundations of AI and Machine Learning — Microsoft (2025)
+- Deep Learning A-Z 2024: Neural Networks, AI & ChatGPT — Udemy (2025)
+- LangGraph: Develop LLM Powered AI Agents — Udemy (2024)
+- LangChain: Develop LLM Powered Applications — Udemy (2024)
+- Statistics for Business Analytics and Data Science — Udemy (2024)
+- Machine Learning A-Z: AI, Python & R — Udemy (2021)
+
+**Language**
+
+- JLPT N1 — Japanese Language Proficiency Test (2014)

@@ -1,0 +1,22 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Marcelo Arita"
+  description: "Senior Data Scientist — time series, LLM agents, and machine learning applied to real-world data."
+  favicon: profile.png
+  open-graph:
+    title: "Marcelo Arita"
+    description: "Senior Data Scientist — time series, LLM agents, and machine learning applied to real-world data."
+    image: profile.png
+  navbar:
+    left:
+      - href: projects/index.qmd
+        text: Projects
+
+format:
+  html:
+    theme: [flatly, custom.scss]
+    toc: false
+    lang: en

@@ -1,0 +1,37 @@
+---
+title: "Projects"
+page-layout: article
+toc: false
+---
+
+```{=html}
+<div class="domain-section">
+  <div class="domain-label">Time Series</div>
+  <div class="project-list">
+
+    <a href="timesfm-energy/" class="project-row">
+      <div class="project-row-title">Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data</div>
+      <div class="project-row-meta">
+        <span>Python &nbsp;·&nbsp; TimesFM &nbsp;·&nbsp; SHAP</span>
+      </div>
+      <div class="project-row-desc">
+        Zero-shot forecasting on 16 years of hourly PJM East grid data — beating a naive lag-24h baseline
+        across all context configurations, with residual analysis revealing systematic weather-driven bias.
+      </div>
+    </a>
+
+    <a href="timesfm-gasoline/" class="project-row">
+      <div class="project-row-title">U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot</div>
+      <div class="project-row-meta">
+        <span>Python &nbsp;·&nbsp; TimesFM</span>
+      </div>
+      <div class="project-row-desc">
+        Zero-shot forecasting with TimesFM 2.5 on weekly EIA gasoline data —
+        beating a naive lag-52 baseline across three consecutive out-of-sample years,
+        plus a residual ensemble analysis with XGBoost.
+      </div>
+    </a>
+
+  </div>
+</div>
+```

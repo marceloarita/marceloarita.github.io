@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data – Marcelo Arita</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../profile.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-875880cfd3c4a6c21e0f6dee55c1cbc4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="Marcelo Arita">
+<meta property="og:description" content="Senior Data Scientist — time series, LLM agents, and machine learning applied to real-world data.">
+<meta property="og:image" content="profile.png">
+<meta property="og:site_name" content="Marcelo Arita">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Marcelo Arita</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects/index.html"> 
+<span class="menu-text">Projects</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#why-this-problem-is-harder-than-it-looks" id="toc-why-this-problem-is-harder-than-it-looks" class="nav-link active" data-scroll-target="#why-this-problem-is-harder-than-it-looks">Why this problem is harder than it looks</a></li>
+  <li><a href="#timesfm-and-the-zero-shot-premise" id="toc-timesfm-and-the-zero-shot-premise" class="nav-link" data-scroll-target="#timesfm-and-the-zero-shot-premise">TimesFM and the zero-shot premise</a></li>
+  <li><a href="#years-of-a-power-grid" id="toc-years-of-a-power-grid" class="nav-link" data-scroll-target="#years-of-a-power-grid">16 years of a power grid</a></li>
+  <li><a href="#how-much-context-does-the-model-need" id="toc-how-much-context-does-the-model-need" class="nav-link" data-scroll-target="#how-much-context-does-the-model-need">How much context does the model need?</a></li>
+  <li><a href="#where-the-model-fails-weather" id="toc-where-the-model-fails-weather" class="nav-link" data-scroll-target="#where-the-model-fails-weather">Where the model fails: weather</a></li>
+  <li><a href="#what-this-tells-us-about-foundation-models" id="toc-what-this-tells-us-about-foundation-models" class="nav-link" data-scroll-target="#what-this-tells-us-about-foundation-models">What this tells us about foundation models</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="project-meta">
+  <span><strong>Domain:</strong> Time Series</span>
+  <span><strong>Industry:</strong> Energy &amp; Utilities</span>
+  <span><strong>Keywords:</strong> Time Series, TimesFM, Zero-Shot Forecasting, XGBoost, SHAP</span>
+  <span><strong>Updated:</strong> Jun 2026</span>
+</div>
+<section id="why-this-problem-is-harder-than-it-looks" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-problem-is-harder-than-it-looks">Why this problem is harder than it looks</h2>
+<p>Predicting electricity demand hour by hour sounds straightforward — the data is regular, the patterns are visible, and grids have been doing this for decades. But the difficulty is in the details. A single heat wave can push demand up by thousands of megawatts in hours. A holiday shifts the entire daily profile. An extreme weather event like a hurricane can collapse consumption overnight.</p>
+<p>The standard solution is a dedicated model trained on historical data from the specific grid you care about. It works well — but it requires data, time, and ongoing maintenance for every new series you add.</p>
+<p>I wanted to test a different approach: skip the training entirely, hand a pre-trained foundation model some recent history, and see if it could produce useful forecasts out of the box.</p>
+</section>
+<section id="timesfm-and-the-zero-shot-premise" class="level2">
+<h2 class="anchored" data-anchor-id="timesfm-and-the-zero-shot-premise">TimesFM and the zero-shot premise</h2>
+<p>TimesFM 2.5 (Time Series Foundational Model) is a foundation model from Google Research, pre-trained on hundreds of billions of time series points across diverse domains — energy, retail, finance, weather. The premise is the same as modern LLMs: train on enough diverse data and the model learns patterns that generalize to new domains without retraining.</p>
+<p>In practice, this means you give it a window of recent history as context, and it returns a forecast. No fine-tuning. No domain-specific features. No knowledge of what a power grid is.</p>
+<p>The honest prior going in: a model with no energy-specific training should capture general temporal patterns reasonably well — daily and weekly cycles are not unique to power grids. Whether it could beat even a naive baseline was less obvious.</p>
+</section>
+<section id="years-of-a-power-grid" class="level2">
+<h2 class="anchored" data-anchor-id="years-of-a-power-grid">16 years of a power grid</h2>
+<p>The dataset is hourly load data from the PJM East grid — the electrical network serving the northeastern United States, from 2002 to 2018. Strong daily cycles, clear weekly rhythms, pronounced annual seasonality driven by heating and cooling demand.</p>
+<p><img src="images/grid-overview.png" class="img-fluid"></p>
+<p>One data quality issue worth addressing before modeling: Hurricane Sandy in October 2012 caused a sharp sustained drop in consumption across the region. Rather than letting that anomaly distort the model’s context window, those hours were replaced with historical averages for the same hour and day of week from the three prior years — preserving continuity without ignoring the event.</p>
+</section>
+<section id="how-much-context-does-the-model-need" class="level2">
+<h2 class="anchored" data-anchor-id="how-much-context-does-the-model-need">How much context does the model need?</h2>
+<p>TimesFM processes input as fixed-size patches of 32 points. This has a direct implication for input design: context length should align with the series’ natural cycles to avoid cutting them mid-patch. For hourly energy data with daily (24h) and weekly (168h) cycles, the mathematically clean choice is LCM(32, 24, 168) = 672 hours — four weeks of fully aligned history.</p>
+<p>Three context lengths were evaluated against a naive baseline — repeat the same hour from the previous day — using walk-forward validation over the first 7 months of 2018:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Context</th>
+<th>MAPE</th>
+<th>Scaled MAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Naive lag-24h</td>
+<td>7.91%</td>
+<td>1.000</td>
+</tr>
+<tr class="even">
+<td>512h (~3 weeks)</td>
+<td>4.74%</td>
+<td>0.630</td>
+</tr>
+<tr class="odd">
+<td>672h (~4 weeks, cycle-aligned)</td>
+<td>4.63%</td>
+<td>0.616</td>
+</tr>
+<tr class="even">
+<td>8,736h (1 year)</td>
+<td><strong>4.44%</strong></td>
+<td><strong>0.580</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Scaled MAE below 1.0 means the model beats the naive baseline. All three configurations did.</p>
+<p>The bigger insight is in the pattern across context lengths. Cycle alignment helps modestly. The real gain comes from a full year of history — with 8,736 hours of context, the model can see that January 2018 should look like January 2017. That’s a pattern no three-week window can capture.</p>
+<p><img src="images/context-comparison.png" class="img-fluid"></p>
+</section>
+<section id="where-the-model-fails-weather" class="level2">
+<h2 class="anchored" data-anchor-id="where-the-model-fails-weather">Where the model fails: weather</h2>
+<p>A 4.44% MAPE is a solid result for a zero-shot model. The more interesting question is where the remaining error comes from. Training an XGBoost model on TimesFM’s residuals — using weather and calendar features — and analyzing it with SHAP gives a clear answer.</p>
+<p><img src="images/shap-features.png" class="img-fluid"></p>
+<p>The three most important features are all weather-derived: humidity, apparent temperature, and temperature. Calendar features barely register. TimesFM already handles temporal structure well — it has internalized weekdays, weekends, and seasonal patterns from pre-training. What it cannot account for is current weather conditions.</p>
+<p>On days above 25°C, the mean residual is +1,331 MW — the model consistently underestimates actual consumption. Air conditioning on hot days pushes demand beyond what historical temporal patterns suggest, and there’s no mechanism in a pure time series model to capture that.</p>
+<p><img src="images/residual-temperature.png" class="img-fluid"></p>
+<p>The residual vs temperature scatter makes this visible: as temperatures rise above ~22°C, errors shift systematically upward. XGBoost learned to correct for this — but the correction was modest. Adding it reduced the hot-day residual from +1,331 MW to +1,235 MW and improved Scaled MAE from 0.580 to 0.562. The bottleneck was data volume: roughly 520 hours above 25°C in the training window, too few to learn the correction reliably.</p>
+</section>
+<section id="what-this-tells-us-about-foundation-models" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-tells-us-about-foundation-models">What this tells us about foundation models</h2>
+<p>TimesFM outperformed the naive baseline across all configurations — on a domain it was never explicitly trained for, with no fine-tuning and no energy-specific features. That result holds up.</p>
+<p>The more useful finding is about failure modes. The model doesn’t fail randomly — it fails systematically, in predictable regimes. That predictability matters more than it might seem: it means errors can be diagnosed and corrected with targeted interventions rather than retraining the entire model. The ensemble added value not because XGBoost predicted residuals well (R² = 0.034) but because it corrected a consistent directional bias in a specific climate regime.</p>
+<p>Zero-shot time series models are not a replacement for domain expertise. But as a starting point — especially when historical data is limited or you’re forecasting across many series — they’re further along than expected.</p>
+<p>One caveat worth noting: the PJM East dataset is publicly available and widely used in the time series literature, so there is a possibility that part of this data was included in TimesFM 2.5’s pre-training corpus. For a rigorous scientific benchmark, that would be a relevant limitation. The goal here is educational — to explore model behavior, validate intuitions about input engineering, and understand where the ensemble approach adds value and where it doesn’t. Results should be interpreted in that context.</p>
+<hr>
+<p><em>Code and full analysis on <a href="https://github.com/marceloarita/timesfm-introduction/tree/main/01-energy-forecasting">GitHub</a>.</em></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
