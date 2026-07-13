@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Projects – Marcelo Arita</title>
+<title>Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics – Marcelo Arita</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -26,24 +26,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<link href="../profile.png" rel="icon" type="image/png">
-<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-2a8bdccac4bafe74c29dda432c1b7a3a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../profile.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-2a8bdccac4bafe74c29dda432c1b7a3a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -79,14 +79,14 @@ ul.task-list li input[type="checkbox"] {
 <meta property="og:site_name" content="Marcelo Arita">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light">
+<body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Marcelo Arita</span>
     </a>
   </div>
@@ -97,7 +97,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../projects/index.html" aria-current="page"> 
+    <a class="nav-link" href="../../projects/index.html"> 
 <span class="menu-text">Projects</span></a>
   </li>  
 </ul>
@@ -111,13 +111,26 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#why-routing-gets-hard-fast" id="toc-why-routing-gets-hard-fast" class="nav-link active" data-scroll-target="#why-routing-gets-hard-fast">Why routing gets hard fast</a></li>
+  <li><a href="#the-baseline-choice-is-architectural-not-a-hyperparameter" id="toc-the-baseline-choice-is-architectural-not-a-hyperparameter" class="nav-link" data-scroll-target="#the-baseline-choice-is-architectural-not-a-hyperparameter">The baseline choice is architectural, not a hyperparameter</a></li>
+  <li><a href="#what-a-suboptimal-route-looks-like" id="toc-what-a-suboptimal-route-looks-like" class="nav-link" data-scroll-target="#what-a-suboptimal-route-looks-like">What a suboptimal route looks like</a></li>
+  <li><a href="#speed-vs.-quality-the-actual-trade-off" id="toc-speed-vs.-quality-the-actual-trade-off" class="nav-link" data-scroll-target="#speed-vs.-quality-the-actual-trade-off">Speed vs.&nbsp;quality: the actual trade-off</a></li>
+  <li><a href="#zero-shot-on-são-paulo" id="toc-zero-shot-on-são-paulo" class="nav-link" data-scroll-target="#zero-shot-on-são-paulo">Zero-shot on São Paulo</a></li>
+  <li><a href="#what-this-shows" id="toc-what-this-shows" class="nav-link" data-scroll-target="#what-this-shows">What this shows</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Projects</h1>
+<h1 class="title">Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics</h1>
 </div>
 
 
@@ -134,56 +147,192 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div class="domain-section">
-  <div class="domain-label">Time Series</div>
-  <div class="project-list">
-
-    <a href="timesfm-energy/" class="project-row">
-      <div class="project-row-title">Energy Demand Forecasting: Testing a Zero-Shot Foundation Model on Real Grid Data</div>
-      <div class="project-row-meta">
-        <span>Python &nbsp;·&nbsp; TimesFM &nbsp;·&nbsp; SHAP</span>
-      </div>
-      <div class="project-row-desc">
-        Zero-shot forecasting on 16 years of hourly PJM East grid data — beating a naive lag-24h baseline
-        across all context configurations, with residual analysis revealing systematic weather-driven bias.
-      </div>
-    </a>
-
-    <a href="timesfm-gasoline/" class="project-row">
-      <div class="project-row-title">U.S. Gasoline Demand Forecasting: A Harder Test for Zero-Shot</div>
-      <div class="project-row-meta">
-        <span>Python &nbsp;·&nbsp; TimesFM</span>
-      </div>
-      <div class="project-row-desc">
-        Zero-shot forecasting with TimesFM 2.5 on weekly EIA gasoline data —
-        beating a naive lag-52 baseline across three consecutive out-of-sample years,
-        plus a residual ensemble analysis with XGBoost.
-      </div>
-    </a>
-
-  </div>
+<div class="project-meta">
+  <span><strong>Domain:</strong> Combinatorial Optimization</span>
+  <span><strong>Industry:</strong> Logistics &amp; Supply Chain</span>
+  <span><strong>Keywords:</strong> Vehicle Routing Problem, REINFORCE, Attention Model, Zero-Shot Transfer, Olist Brazil</span>
+  <span><strong>Updated:</strong> Jul 2026</span>
 </div>
-
-<div class="domain-section">
-  <div class="domain-label">Combinatorial Optimization</div>
-  <div class="project-list">
-
-    <a href="nazari-vrp-brazil/" class="project-row">
-      <div class="project-row-title">Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics</div>
-      <div class="project-row-meta">
-        <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; OR-Tools</span>
-      </div>
-      <div class="project-row-desc">
-        Reproduces the Nazari et al. (2018) attention model for the Capacitated Vehicle Routing Problem —
-        showing the REINFORCE baseline choice is architectural, not a hyperparameter, and quantifying a
-        3,700x speed-for-quality trade-off against OR-Tools that becomes a 61% gap on real São Paulo delivery data.
-      </div>
-    </a>
-
-  </div>
+<section id="why-routing-gets-hard-fast" class="level2">
+<h2 class="anchored" data-anchor-id="why-routing-gets-hard-fast">Why routing gets hard fast</h2>
+<p>A vehicle routing problem is deceptively easy to state: given a depot and a list of customers with known demand, find efficient routes for a capacity-limited fleet that visits everyone exactly once. It’s also combinatorially brutal — a 20-customer instance already has more than 10^17 possible route orderings, far beyond what an exact solver can search directly. Classical solvers handle this by pruning that space; learned heuristics try to shortcut it entirely.</p>
+<p>This project reproduces the attention-based policy from Nazari et al.&nbsp;(2018) end to end — architecture, REINFORCE training loop, and baseline variants — tests it at two problem sizes, and then takes it somewhere the original paper never did: real delivery addresses in São Paulo, via the Olist e-commerce dataset.</p>
+</section>
+<section id="the-baseline-choice-is-architectural-not-a-hyperparameter" class="level2">
+<h2 class="anchored" data-anchor-id="the-baseline-choice-is-architectural-not-a-hyperparameter">The baseline choice is architectural, not a hyperparameter</h2>
+<p>The model is a policy trained with REINFORCE, and REINFORCE needs a baseline — a reference value subtracted from the reward to compute how much better (or worse) a given route was than expected. Four variants were trained on VRP10 under identical conditions: no baseline at all, an exponential moving average of past rewards, a greedy baseline (the model’s own deterministic tour), and the Kool baseline (Kool et al., 2019) — a frozen copy of the model, updated only when a statistical test confirms real improvement.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/vrp10_baselines.png" class="img-fluid figure-img"></p>
+<figcaption>W&amp;B training curves — reward_mean over 10,000 epochs on VRP10</figcaption>
+</figure>
 </div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Baseline</th>
+<th>Gap% vs OR-Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No baseline</td>
+<td>84.7%</td>
+</tr>
+<tr class="even">
+<td>EMA</td>
+<td>14.8%</td>
+</tr>
+<tr class="odd">
+<td>Greedy</td>
+<td>13.1%</td>
+</tr>
+<tr class="even">
+<td>Kool</td>
+<td>17.1%</td>
+</tr>
+</tbody>
+</table>
+<p>At VRP10, the problem is small enough that greedy and Kool land at essentially the same quality — the gap between them is within sampling noise. Only “no baseline” is a clear outlier. That result would suggest baseline choice barely matters, except it doesn’t hold at the next size up.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/vrp20_baselines.png" class="img-fluid figure-img"></p>
+<figcaption>W&amp;B training curves — reward_mean over 20,000 epochs on VRP20</figcaption>
+</figure>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Baseline</th>
+<th>Gap% vs OR-Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Greedy</td>
+<td>179.4%</td>
+</tr>
+<tr class="even">
+<td>Kool</td>
+<td>19.5%</td>
+</tr>
+</tbody>
+</table>
+<p>At VRP20, greedy collapses — to a policy <em>worse than random routing</em>. The reason is structural: the policy and its own baseline share the same weights, so the moment the policy improves, the baseline catches up with it, and the advantage signal that drives learning goes to zero before anything useful is learned. Kool’s frozen copy breaks that feedback loop, producing the classic phase-transition curve — a long flat stretch, then a sharp drop once the policy has pulled far enough ahead of its (stale) reference to get a real gradient. Greedy and Kool aren’t two points on the same curve; one of them simply doesn’t converge once the problem is big enough to matter.</p>
+</section>
+<section id="what-a-suboptimal-route-looks-like" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-suboptimal-route-looks-like">What a suboptimal route looks like</h2>
+<p>Numbers say Kool’s VRP20 policy is 19.5% behind OR-Tools. Plotting the actual routes shows what that gap looks like on the ground.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/vrp20_routes.png" class="img-fluid figure-img"></p>
+<figcaption>Nazari (left) vs.&nbsp;OR-Tools (right) — VRP20, three representative instances</figcaption>
+</figure>
+</div>
+<p><em>A single vehicle makes multiple trips from the depot, reloading between each; every color is one trip.</em></p>
+<p>The model has no lookahead — it commits to the next customer one step at a time, with no way to see how that choice will affect the rest of the trip. The visible symptom is trip crossing: two trips of the same vehicle forming an X, a clear sign of suboptimality. OR-Tools consistently avoids this by routing along the perimeter of each cluster; Nazari has no such guarantee because it selects customers one at a time without lookahead into how future trips will interact. It’s the same trade-off in miniature that explains the whole project — a policy that decides fast and locally will occasionally produce a trip a human dispatcher would immediately flag as backwards.</p>
+</section>
+<section id="speed-vs.-quality-the-actual-trade-off" class="level2">
+<h2 class="anchored" data-anchor-id="speed-vs.-quality-the-actual-trade-off">Speed vs.&nbsp;quality: the actual trade-off</h2>
+<p>None of this matters without weighing it against what you get in return. OR-Tools searches for up to 30 seconds per instance; Nazari runs a full batch in a single forward pass.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>Nazari (greedy)</th>
+<th>OR-Tools (GLS)</th>
+<th>Speedup</th>
+<th>Gap%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>VRP10</td>
+<td>~2 ms/instance</td>
+<td>~5 s/instance</td>
+<td>~2,500x</td>
+<td>17.1%</td>
+</tr>
+<tr class="even">
+<td>VRP20</td>
+<td>~8 ms/instance</td>
+<td>~30 s/instance</td>
+<td>~3,700x</td>
+<td>19.5%</td>
+</tr>
+</tbody>
+</table>
+<p>A ~20% longer tour for a ~3,700x faster solve. For dispatch systems making hundreds of routing calls in real time — or simulating thousands of scenarios where near-optimal is good enough — that trade often wins.</p>
+</section>
+<section id="zero-shot-on-são-paulo" class="level2">
+<h2 class="anchored" data-anchor-id="zero-shot-on-são-paulo">Zero-shot on São Paulo</h2>
+<p>Every result above comes from customers scattered uniformly inside a unit square — a convenient synthetic distribution, and nothing like a real city. To measure that gap directly, I built VRP20 instances from the Olist Brazilian e-commerce dataset: ~15,500 São Paulo orders, geocoded via postal-code prefix, split into 5 natural delivery zones by K-means, with order weight mapped into the same demand range the model was trained on.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/02_geographic_clusters.png" class="img-fluid figure-img"></p>
+<figcaption>São Paulo customer clusters (K=5)</figcaption>
+</figure>
+</div>
+<p>Running the VRP20 Kool model zero-shot — no retraining — against real customers in each zone:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Cluster</th>
+<th>Model</th>
+<th>OR-Tools</th>
+<th>Gap%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C1 (Leste)</td>
+<td>5.648</td>
+<td>3.644</td>
+<td>55.0%</td>
+</tr>
+<tr class="even">
+<td>C2 (Norte)</td>
+<td>5.535</td>
+<td>3.996</td>
+<td>40.0%</td>
+</tr>
+<tr class="odd">
+<td>C3 (Sul)</td>
+<td>5.970</td>
+<td>3.395</td>
+<td>79.4%</td>
+</tr>
+<tr class="even">
+<td>C4 (Oeste)</td>
+<td>5.294</td>
+<td>3.307</td>
+<td>61.4%</td>
+</tr>
+<tr class="odd">
+<td>C5 (Centro-Sul)</td>
+<td>6.043</td>
+<td>3.572</td>
+<td>70.7%</td>
+</tr>
+<tr class="even">
+<td><strong>Overall</strong></td>
+<td><strong>5.698</strong></td>
+<td><strong>3.583</strong></td>
+<td><strong>61.3%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The gap triples, from 19.5% on synthetic uniform instances to 61.3% on real customers. That’s the actual finding: São Paulo’s dense, unevenly clustered geography is a structurally different problem from the one the model was trained on, and the cost of that mismatch is measurable, not hand-wavy. Fittingly, the zone closest to a uniform spread (C2) has the smallest gap; the densest zone (C3) has the largest.</p>
+</section>
+<section id="what-this-shows" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-shows">What this shows</h2>
+<p>The interesting parts of this project are the two things a straight reimplementation wouldn’t surface on its own. First, the baseline is an architectural decision, not a tuning knob — it’s invisible at VRP10 and decisive at VRP20. Second, a 19.5% gap on the training distribution and a 61.3% gap on real customers are both true at once, and the difference between them is a precise measurement of what “trained on synthetic data” actually costs once it meets a real city.</p>
+<p>Closing the second gap — training on São Paulo’s own spatial distribution via KDE, and scaling further to VRP50 — is the next phase of this work.</p>
+<hr>
+<p><em>Code on <a href="https://github.com/marceloarita/nazari-vrp-brazil">GitHub</a>.</em></p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

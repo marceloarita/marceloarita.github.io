@@ -1,0 +1,95 @@
+---
+title: "Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics"
+page-layout: article
+toc: true
+toc-depth: 2
+---
+
+```{=html}
+<div class="project-meta">
+  <span><strong>Domain:</strong> Combinatorial Optimization</span>
+  <span><strong>Industry:</strong> Logistics &amp; Supply Chain</span>
+  <span><strong>Keywords:</strong> Vehicle Routing Problem, REINFORCE, Attention Model, Zero-Shot Transfer, Olist Brazil</span>
+  <span><strong>Updated:</strong> Jul 2026</span>
+</div>
+```
+
+## Why routing gets hard fast
+
+A vehicle routing problem is deceptively easy to state: given a depot and a list of customers with known demand, find efficient routes for a capacity-limited fleet that visits everyone exactly once. It's also combinatorially brutal — a 20-customer instance already has more than 10^17 possible route orderings, far beyond what an exact solver can search directly. Classical solvers handle this by pruning that space; learned heuristics try to shortcut it entirely.
+
+This project reproduces the attention-based policy from Nazari et al. (2018) end to end — architecture, REINFORCE training loop, and baseline variants — tests it at two problem sizes, and then takes it somewhere the original paper never did: real delivery addresses in São Paulo, via the Olist e-commerce dataset.
+
+## The baseline choice is architectural, not a hyperparameter
+
+The model is a policy trained with REINFORCE, and REINFORCE needs a baseline — a reference value subtracted from the reward to compute how much better (or worse) a given route was than expected. Four variants were trained on VRP10 under identical conditions: no baseline at all, an exponential moving average of past rewards, a greedy baseline (the model's own deterministic tour), and the Kool baseline (Kool et al., 2019) — a frozen copy of the model, updated only when a statistical test confirms real improvement.
+
+![W&B training curves — reward_mean over 10,000 epochs on VRP10](images/vrp10_baselines.png)
+
+| Baseline | Gap% vs OR-Tools |
+|---|---|
+| No baseline | 84.7% |
+| EMA | 14.8% |
+| Greedy | 13.1% |
+| Kool | 17.1% |
+
+At VRP10, the problem is small enough that greedy and Kool land at essentially the same quality — the gap between them is within sampling noise. Only "no baseline" is a clear outlier. That result would suggest baseline choice barely matters, except it doesn't hold at the next size up.
+
+![W&B training curves — reward_mean over 20,000 epochs on VRP20](images/vrp20_baselines.png)
+
+| Baseline | Gap% vs OR-Tools |
+|---|---|
+| Greedy | 179.4% |
+| Kool | 19.5% |
+
+At VRP20, greedy collapses — to a policy *worse than random routing*. The reason is structural: the policy and its own baseline share the same weights, so the moment the policy improves, the baseline catches up with it, and the advantage signal that drives learning goes to zero before anything useful is learned. Kool's frozen copy breaks that feedback loop, producing the classic phase-transition curve — a long flat stretch, then a sharp drop once the policy has pulled far enough ahead of its (stale) reference to get a real gradient. Greedy and Kool aren't two points on the same curve; one of them simply doesn't converge once the problem is big enough to matter.
+
+## What a suboptimal route looks like
+
+Numbers say Kool's VRP20 policy is 19.5% behind OR-Tools. Plotting the actual routes shows what that gap looks like on the ground.
+
+![Nazari (left) vs. OR-Tools (right) — VRP20, three representative instances](images/vrp20_routes.png)
+
+*A single vehicle makes multiple trips from the depot, reloading between each; every color is one trip.*
+
+The model has no lookahead — it commits to the next customer one step at a time, with no way to see how that choice will affect the rest of the trip. The visible symptom is trip crossing: two trips of the same vehicle forming an X, a clear sign of suboptimality. OR-Tools consistently avoids this by routing along the perimeter of each cluster; Nazari has no such guarantee because it selects customers one at a time without lookahead into how future trips will interact. It's the same trade-off in miniature that explains the whole project — a policy that decides fast and locally will occasionally produce a trip a human dispatcher would immediately flag as backwards.
+
+## Speed vs. quality: the actual trade-off
+
+None of this matters without weighing it against what you get in return. OR-Tools searches for up to 30 seconds per instance; Nazari runs a full batch in a single forward pass.
+
+| Problem | Nazari (greedy) | OR-Tools (GLS) | Speedup | Gap% |
+|---|---|---|---|---|
+| VRP10 | ~2 ms/instance | ~5 s/instance | ~2,500x | 17.1% |
+| VRP20 | ~8 ms/instance | ~30 s/instance | ~3,700x | 19.5% |
+
+A ~20% longer tour for a ~3,700x faster solve. For dispatch systems making hundreds of routing calls in real time — or simulating thousands of scenarios where near-optimal is good enough — that trade often wins.
+
+## Zero-shot on São Paulo
+
+Every result above comes from customers scattered uniformly inside a unit square — a convenient synthetic distribution, and nothing like a real city. To measure that gap directly, I built VRP20 instances from the Olist Brazilian e-commerce dataset: ~15,500 São Paulo orders, geocoded via postal-code prefix, split into 5 natural delivery zones by K-means, with order weight mapped into the same demand range the model was trained on.
+
+![São Paulo customer clusters (K=5)](images/02_geographic_clusters.png)
+
+Running the VRP20 Kool model zero-shot — no retraining — against real customers in each zone:
+
+| Cluster | Model | OR-Tools | Gap% |
+|---|---|---|---|
+| C1 (Leste) | 5.648 | 3.644 | 55.0% |
+| C2 (Norte) | 5.535 | 3.996 | 40.0% |
+| C3 (Sul) | 5.970 | 3.395 | 79.4% |
+| C4 (Oeste) | 5.294 | 3.307 | 61.4% |
+| C5 (Centro-Sul) | 6.043 | 3.572 | 70.7% |
+| **Overall** | **5.698** | **3.583** | **61.3%** |
+
+The gap triples, from 19.5% on synthetic uniform instances to 61.3% on real customers. That's the actual finding: São Paulo's dense, unevenly clustered geography is a structurally different problem from the one the model was trained on, and the cost of that mismatch is measurable, not hand-wavy. Fittingly, the zone closest to a uniform spread (C2) has the smallest gap; the densest zone (C3) has the largest.
+
+## What this shows
+
+The interesting parts of this project are the two things a straight reimplementation wouldn't surface on its own. First, the baseline is an architectural decision, not a tuning knob — it's invisible at VRP10 and decisive at VRP20. Second, a 19.5% gap on the training distribution and a 61.3% gap on real customers are both true at once, and the difference between them is a precise measurement of what "trained on synthetic data" actually costs once it meets a real city.
+
+Closing the second gap — training on São Paulo's own spatial distribution via KDE, and scaling further to VRP50 — is the next phase of this work.
+
+---
+
+*Code on [GitHub](https://github.com/marceloarita/nazari-vrp-brazil).*
