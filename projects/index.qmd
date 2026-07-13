@@ -40,7 +40,7 @@ toc: false
   <div class="project-list">
 
     <a href="nazari-vrp-brazil/" class="project-row">
-      <div class="project-row-title">Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics</div>
+      <div class="project-row-title">Vehicle Routing with REINFORCE: A Zero-Shot Test on Real Delivery Data</div>
       <div class="project-row-meta">
         <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; OR-Tools</span>
       </div>

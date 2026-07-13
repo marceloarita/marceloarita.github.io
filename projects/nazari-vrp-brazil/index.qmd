@@ -1,5 +1,5 @@
 ---
-title: "Reinforcement Learning for Vehicle Routing: From Paper to Real-World Logistics"
+title: "Vehicle Routing with REINFORCE: A Zero-Shot Test on Real Delivery Data"
 page-layout: article
 toc: true
 toc-depth: 2
@@ -14,11 +14,15 @@ toc-depth: 2
 </div>
 ```
 
+## TL;DR
+
+Reproducing Nazari et al. (2018)'s attention-based CVRP policy shows that the REINFORCE baseline is an architectural choice, not a tuning knob — a greedy baseline collapses at VRP20 while a frozen (Kool) baseline converges to a 19.5% gap against OR-Tools, in exchange for a ~3,700x faster solve. Tested zero-shot on real São Paulo delivery data, that gap triples to 61.3% — a direct measurement of what training on synthetic, uniformly-distributed customers costs once the model meets a real city.
+
 ## Why routing gets hard fast
 
-A vehicle routing problem is deceptively easy to state: given a depot and a list of customers with known demand, find efficient routes for a capacity-limited fleet that visits everyone exactly once. It's also combinatorially brutal — a 20-customer instance already has more than 10^17 possible route orderings, far beyond what an exact solver can search directly. Classical solvers handle this by pruning that space; learned heuristics try to shortcut it entirely.
+A vehicle routing problem is deceptively easy to state: given a depot and a list of customers with known demand, find efficient routes for a capacity-limited fleet that visits everyone exactly once. It's also combinatorially brutal — a 20-customer instance already has more than 10^17 possible route orderings, far beyond what an exact solver can search directly. Classical solvers handle this by pruning that space, trading time for optimality. Nazari's approach makes the opposite trade: it doesn't aim to find the optimal route, only a good enough one, almost instantly. The gain isn't solution quality — it's inference time, and that's the trade-off this project measures directly.
 
-This project reproduces the attention-based policy from Nazari et al. (2018) end to end — architecture, REINFORCE training loop, and baseline variants — tests it at two problem sizes, and then takes it somewhere the original paper never did: real delivery addresses in São Paulo, via the Olist e-commerce dataset.
+This project reproduces the attention-based policy from Nazari et al. (2018) end to end — architecture, REINFORCE training loop, and baseline variants — evaluates it at two problem sizes against OR-Tools as a classical baseline, and closes with a zero-shot test on real delivery data from São Paulo.
 
 ## The baseline choice is architectural, not a hyperparameter
 
@@ -33,7 +37,9 @@ The model is a policy trained with REINFORCE, and REINFORCE needs a baseline —
 | Greedy | 13.1% |
 | Kool | 17.1% |
 
-At VRP10, the problem is small enough that greedy and Kool land at essentially the same quality — the gap between them is within sampling noise. Only "no baseline" is a clear outlier. That result would suggest baseline choice barely matters, except it doesn't hold at the next size up.
+*Gap% based on 32 validation instances.*
+
+At VRP10, the problem is small enough that greedy and Kool land at essentially the same quality — the gap between them is within sampling noise (based on 32 validation instances). Only "no baseline" is a clear outlier. That result would suggest baseline choice barely matters, except it doesn't hold at the next size up.
 
 ![W&B training curves — reward_mean over 20,000 epochs on VRP20](images/vrp20_baselines.png)
 
@@ -41,6 +47,8 @@ At VRP10, the problem is small enough that greedy and Kool land at essentially t
 |---|---|
 | Greedy | 179.4% |
 | Kool | 19.5% |
+
+*Gap% based on 32 validation instances.*
 
 At VRP20, greedy collapses — to a policy *worse than random routing*. The reason is structural: the policy and its own baseline share the same weights, so the moment the policy improves, the baseline catches up with it, and the advantage signal that drives learning goes to zero before anything useful is learned. Kool's frozen copy breaks that feedback loop, producing the classic phase-transition curve — a long flat stretch, then a sharp drop once the policy has pulled far enough ahead of its (stale) reference to get a real gradient. Greedy and Kool aren't two points on the same curve; one of them simply doesn't converge once the problem is big enough to matter.
 
@@ -52,7 +60,7 @@ Numbers say Kool's VRP20 policy is 19.5% behind OR-Tools. Plotting the actual ro
 
 *A single vehicle makes multiple trips from the depot, reloading between each; every color is one trip.*
 
-The model has no lookahead — it commits to the next customer one step at a time, with no way to see how that choice will affect the rest of the trip. The visible symptom is trip crossing: two trips of the same vehicle forming an X, a clear sign of suboptimality. OR-Tools consistently avoids this by routing along the perimeter of each cluster; Nazari has no such guarantee because it selects customers one at a time without lookahead into how future trips will interact. It's the same trade-off in miniature that explains the whole project — a policy that decides fast and locally will occasionally produce a trip a human dispatcher would immediately flag as backwards.
+The model has no lookahead: at each step it only sees the current state — where the vehicle is, which customers are still unserved, how much capacity is left — and picks whichever next customer looks best right now, without simulating the next 5 or 10 steps. It's a one-step, autoregressive policy, not a planner. That's exactly what produces the X: the model can head toward a distant customer because it looks like a good local move, with no way to notice that the choice will force it to double back across ground it's already covered. OR-Tools avoids this because it searches the whole route before committing, routing along the perimeter of each cluster instead; Nazari has no such guarantee. It's the same trade-off in miniature that explains the whole project — a policy that decides fast and locally will occasionally produce a trip a human dispatcher would immediately flag as backwards.
 
 ## Speed vs. quality: the actual trade-off
 
@@ -71,7 +79,7 @@ Every result above comes from customers scattered uniformly inside a unit square
 
 ![São Paulo customer clusters (K=5)](images/02_geographic_clusters.png)
 
-Running the VRP20 Kool model zero-shot — no retraining — against real customers in each zone:
+Running the VRP20 Kool model zero-shot — no retraining — against 32 real-customer instances sampled from each zone:
 
 | Cluster | Model | OR-Tools | Gap% |
 |---|---|---|---|
