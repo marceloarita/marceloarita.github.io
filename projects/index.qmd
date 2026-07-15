@@ -47,7 +47,7 @@ toc: false
       <div class="project-row-desc">
         Reproduces the Nazari et al. (2018) attention model for the Capacitated Vehicle Routing Problem —
         showing the REINFORCE baseline choice is architectural, not a hyperparameter, and quantifying a
-        3,700x speed-for-quality trade-off against OR-Tools that becomes a 61% gap on real São Paulo delivery data.
+        3,700x speed-for-quality trade-off against OR-Tools that becomes a 64% gap on real São Paulo delivery data.
       </div>
     </a>
 

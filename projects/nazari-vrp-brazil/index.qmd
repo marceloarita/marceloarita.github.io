@@ -14,9 +14,13 @@ toc-depth: 2
 </div>
 ```
 
+*This page covers Part I of the project: reproducing Nazari et al. and putting it through a business-relevant stress test — speed vs. quality against a classical solver, then a zero-shot run on real São Paulo delivery data. Part II, training the model directly on São Paulo's own geography to close the gap this page exposes, will be a separate write-up once results land. Full technical detail — model code, training scripts, masking logic — is in the [GitHub repo](https://github.com/marceloarita/nazari-vrp-brazil).*
+
 ## TL;DR
 
-Reproducing Nazari et al. (2018)'s attention-based CVRP policy shows that the REINFORCE baseline is an architectural choice, not a tuning knob — a greedy baseline collapses at VRP20 while a frozen (Kool) baseline converges to a 19.5% gap against OR-Tools, in exchange for a ~3,700x faster solve. Tested zero-shot on real São Paulo delivery data, that gap triples to 61.3% — a direct measurement of what training on synthetic, uniformly-distributed customers costs once the model meets a real city.
+- Reproducing Nazari et al. (2018)'s attention-based CVRP policy shows that the REINFORCE baseline is an architectural choice, not a tuning knob — a greedy baseline collapses at VRP20 while a frozen (Kool) baseline holds a 19.5% gap against OR-Tools, in exchange for a ~3,700x faster solve.
+- That speed is what makes the gap easy to shrink for free: since one inference pass takes milliseconds, sampling 128 candidate routes and keeping the shortest still costs a fraction of a single OR-Tools solve — no retraining, and it nearly halves the gap.
+- Tested zero-shot on real São Paulo delivery data, though, the gap jumps to 63.8% — a direct measurement of what training on synthetic, uniformly-distributed customers costs once the model meets a real city.
 
 ## Why routing gets hard fast
 
@@ -26,7 +30,7 @@ This project reproduces the attention-based policy from Nazari et al. (2018) end
 
 ## The baseline choice is architectural, not a hyperparameter
 
-The model is a policy trained with REINFORCE, and REINFORCE needs a baseline — a reference value subtracted from the reward to compute how much better (or worse) a given route was than expected. Four variants were trained on VRP10 under identical conditions: no baseline at all, an exponential moving average of past rewards, a greedy baseline (the model's own deterministic tour), and the Kool baseline (Kool et al., 2019) — a frozen copy of the model, updated only when a statistical test confirms real improvement.
+REINFORCE — the algorithm used to train the policy — needs a reference value, called a baseline, to judge whether a given route turned out better or worse than expected. Four ways of computing that reference were tested on VRP10 under identical conditions: no baseline, an exponential moving average of past rewards, a greedy baseline (the model's own current tour), and a Kool baseline (a frozen copy of the model, updated only when a statistical test confirms real improvement).
 
 ![W&B training curves — reward_mean over 10,000 epochs on VRP10](images/vrp10_baselines.png)
 
@@ -50,53 +54,65 @@ At VRP10, the problem is small enough that greedy and Kool land at essentially t
 
 *Gap% based on 32 validation instances.*
 
-At VRP20, greedy collapses — to a policy *worse than random routing*. The reason is structural: the policy and its own baseline share the same weights, so the moment the policy improves, the baseline catches up with it, and the advantage signal that drives learning goes to zero before anything useful is learned. Kool's frozen copy breaks that feedback loop, producing the classic phase-transition curve — a long flat stretch, then a sharp drop once the policy has pulled far enough ahead of its (stale) reference to get a real gradient. Greedy and Kool aren't two points on the same curve; one of them simply doesn't converge once the problem is big enough to matter.
+At VRP20, greedy collapses into a degenerate policy. Because the policy and its own baseline share the same weights, the moment the policy improves, the baseline improves right along with it, and the learning signal disappears before it converges. Kool's frozen copy breaks that feedback loop instead. Greedy and Kool aren't two points on the same curve; one of them simply doesn't converge once the problem is big enough to matter — the mechanics of why are in the repo.
 
-## What a suboptimal route looks like
+## Decoding for free: sampling closes most of the gap
 
-Numbers say Kool's VRP20 policy is 19.5% behind OR-Tools. Plotting the actual routes shows what that gap looks like on the ground.
+Training isn't the only lever. At inference time, instead of taking the model's single best guess for each customer (*greedy* decoding), you can sample 128 candidate routes from the same trained policy and keep the shortest one — no retraining required.
 
-![Nazari (left) vs. OR-Tools (right) — VRP20, three representative instances](images/vrp20_routes.png)
+| Problem | Baseline | Greedy gap | Best-of-128 gap |
+|---|---|---|---|
+| VRP10 | Kool | 17.1% | 4.3% |
+| VRP20 | Kool | 19.5% | 8.9% |
 
-*A single vehicle makes multiple trips from the depot, reloading between each; every color is one trip.*
+Sampling roughly quarters the VRP10 gap and cuts the VRP20 gap in half — for the cost of running the same fast model 128 times instead of once, still nowhere near OR-Tools' 30-second search. The visual effect is just as clear:
 
-The model has no lookahead: at each step it only sees the current state — where the vehicle is, which customers are still unserved, how much capacity is left — and picks whichever next customer looks best right now, without simulating the next 5 or 10 steps. It's a one-step, autoregressive policy, not a planner. That's exactly what produces the X: the model can head toward a distant customer because it looks like a good local move, with no way to notice that the choice will force it to double back across ground it's already covered. OR-Tools avoids this because it searches the whole route before committing, routing along the perimeter of each cluster instead; Nazari has no such guarantee. It's the same trade-off in miniature that explains the whole project — a policy that decides fast and locally will occasionally produce a trip a human dispatcher would immediately flag as backwards.
+![Nazari greedy vs. best-of-128 vs. OR-Tools — VRP20, three representative instances](images/vrp20_routes.png)
+
+*A single vehicle makes multiple trips from the depot, reloading between each; every color is one trip. Greedy routes (left) often cross themselves — a single trip forming an X, backtracking across ground it already covered, because the model commits to each next customer without simulating how that choice plays out later. Best-of-128 (middle) removes most of these crossings just by sampling more candidates; OR-Tools (right) still routes the cleanest, along each cluster's perimeter.*
 
 ## Speed vs. quality: the actual trade-off
 
 None of this matters without weighing it against what you get in return. OR-Tools searches for up to 30 seconds per instance; Nazari runs a full batch in a single forward pass.
 
-| Problem | Nazari (greedy) | OR-Tools (GLS) | Speedup | Gap% |
-|---|---|---|---|---|
-| VRP10 | ~2 ms/instance | ~5 s/instance | ~2,500x | 17.1% |
-| VRP20 | ~8 ms/instance | ~30 s/instance | ~3,700x | 19.5% |
+| Problem | Nazari (greedy) | OR-Tools (GLS) | Speedup |
+|---|---|---|---|
+| VRP10 | ~2 ms/instance | ~5 s/instance | ~2,500x |
+| VRP20 | ~8 ms/instance | ~30 s/instance | ~3,700x |
 
-A ~20% longer tour for a ~3,700x faster solve. For dispatch systems making hundreds of routing calls in real time — or simulating thousands of scenarios where near-optimal is good enough — that trade often wins.
+For dispatch systems making hundreds of routing calls in real time — or simulating thousands of scenarios where near-optimal is good enough — that speedup alone is the trade worth making. It's also exactly what makes best-of-128 sampling cheap in the first place: running the model 128 times and keeping the shortest tour still costs a fraction of a single OR-Tools solve, which is why that lever is free in practice, not just in theory.
 
 ## Zero-shot on São Paulo
 
-Every result above comes from customers scattered uniformly inside a unit square — a convenient synthetic distribution, and nothing like a real city. To measure that gap directly, I built VRP20 instances from the Olist Brazilian e-commerce dataset: ~15,500 São Paulo orders, geocoded via postal-code prefix, split into 5 natural delivery zones by K-means, with order weight mapped into the same demand range the model was trained on.
+Every result above comes from customers scattered uniformly inside a unit square — a convenient synthetic distribution, and nothing like a real city. To measure that gap directly, VRP20 instances were built from the Olist Brazilian e-commerce dataset: ~15,200 São Paulo orders, geocoded via postal-code prefix, split into 5 natural delivery zones by K-means, with order weight mapped into the same demand range the model was trained on.
 
 ![São Paulo customer clusters (K=5)](images/02_geographic_clusters.png)
 
-Running the VRP20 Kool model zero-shot — no retraining — against 32 real-customer instances sampled from each zone:
+Running the VRP20 Kool model zero-shot — no retraining — against 32 held-out real-customer instances sampled from each zone:
 
-| Cluster | Model | OR-Tools | Gap% |
-|---|---|---|---|
-| C1 (Leste) | 5.648 | 3.644 | 55.0% |
-| C2 (Norte) | 5.535 | 3.996 | 40.0% |
-| C3 (Sul) | 5.970 | 3.395 | 79.4% |
-| C4 (Oeste) | 5.294 | 3.307 | 61.4% |
-| C5 (Centro-Sul) | 6.043 | 3.572 | 70.7% |
-| **Overall** | **5.698** | **3.583** | **61.3%** |
+| Cluster | Model | OR-Tools | Greedy gap | Best-of-128 gap |
+|---|---|---|---|---|
+| C1 (Leste) | 5.473 | 3.557 | 54.4% | 21.2% |
+| C2 (Norte) | 5.435 | 4.136 | 31.5% | 15.8% |
+| C3 (Sul) | 6.255 | 3.358 | 90.1% | 34.0% |
+| C4 (Oeste) | 5.054 | 3.260 | 57.0% | 27.2% |
+| C5 (Centro-Sul) | 6.356 | 3.429 | 86.0% | 36.6% |
+| **Overall** | **5.715** | **3.548** | **63.8%** | **26.9%** |
 
-The gap triples, from 19.5% on synthetic uniform instances to 61.3% on real customers. That's the actual finding: São Paulo's dense, unevenly clustered geography is a structurally different problem from the one the model was trained on, and the cost of that mismatch is measurable, not hand-wavy. Fittingly, the zone closest to a uniform spread (C2) has the smallest gap; the densest zone (C3) has the largest.
+The gap jumps from 19.5% on synthetic uniform instances to 63.8% on real customers (greedy). Best-of-128 sampling — the same free lever that helped on synthetic data — roughly halves it, to 26.9%, but can't close it: sampling only explores tours from a policy that never saw clustered geography, so the distribution mismatch sets a ceiling that decoding tricks can't lift.
+
+![Zero-shot on real São Paulo data (zone C5, held-out): greedy vs. best-of-128 vs. OR-Tools](images/vrp20_routes_sp_c5_zeroshot.png)
+
+*Greedy routes sprawl with long crossings; best-of-128 tightens them, but the policy never learned São Paulo's dense structure, so both stay far from OR-Tools.*
 
 ## What this shows
 
-The interesting parts of this project are the two things a straight reimplementation wouldn't surface on its own. First, the baseline is an architectural decision, not a tuning knob — it's invisible at VRP10 and decisive at VRP20. Second, a 19.5% gap on the training distribution and a 61.3% gap on real customers are both true at once, and the difference between them is a precise measurement of what "trained on synthetic data" actually costs once it meets a real city.
+The interesting parts of this project are two things a straight reimplementation wouldn't surface on its own:
 
-Closing the second gap — training on São Paulo's own spatial distribution via KDE, and scaling further to VRP50 — is the next phase of this work.
+- The REINFORCE baseline is an architectural decision, not a tuning knob — invisible at VRP10, decisive at VRP20.
+- A controllable ~9–20% gap on the training distribution and a 63.8% gap on real customers are both true of the same model — the difference is a precise measurement of what "trained on synthetic, uniform data" costs once it meets a real city.
+
+Closing that gap — training directly on São Paulo's own spatial distribution — is Part II of this work, and will get its own write-up once results land.
 
 ---
 
