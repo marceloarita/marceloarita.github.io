@@ -9,7 +9,7 @@ toc-depth: 2
 <div class="project-meta">
   <span><strong>Domain:</strong> Combinatorial Optimization</span>
   <span><strong>Industry:</strong> Logistics &amp; Supply Chain</span>
-  <span><strong>Keywords:</strong> Vehicle Routing Problem, POMO, Per-Zone Training, 2-opt, Zero-Shot Transfer</span>
+  <span><strong>Keywords:</strong> Vehicle Routing Problem, Reinforcement Learning, Zero-Shot Transfer</span>
   <span><strong>Updated:</strong> Jul 2026</span>
 </div>
 ```

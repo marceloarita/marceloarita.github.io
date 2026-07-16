@@ -53,7 +53,7 @@
     "href": "projects/nazari-vrp-sao-paulo/index.html",
     "title": "Per-Zone Vehicle Routing (Part II): Closing the Zero-Shot Gap on Real São Paulo Data",
     "section": "",
-    "text": "Domain: Combinatorial Optimization\n  Industry: Logistics & Supply Chain\n  Keywords: Vehicle Routing Problem, POMO, Per-Zone Training, 2-opt, Zero-Shot Transfer\n  Updated: Jul 2026\nThis is Part II, continuing directly from Part I, which reproduced Nazari et al. (2018) and applied it zero-shot to real São Paulo delivery data — exposing a 63.8% gap (26.9% with best-of-128 sampling) against OR-Tools. This page covers how that gap was closed. Full technical detail — code, training scripts, hypothesis logs — is in the GitHub repo."
+    "text": "Domain: Combinatorial Optimization\n  Industry: Logistics & Supply Chain\n  Keywords: Vehicle Routing Problem, Reinforcement Learning, Zero-Shot Transfer\n  Updated: Jul 2026\nThis is Part II, continuing directly from Part I, which reproduced Nazari et al. (2018) and applied it zero-shot to real São Paulo delivery data — exposing a 63.8% gap (26.9% with best-of-128 sampling) against OR-Tools. This page covers how that gap was closed. Full technical detail — code, training scripts, hypothesis logs — is in the GitHub repo."
   },
   {
     "objectID": "projects/nazari-vrp-sao-paulo/index.html#tldr",
