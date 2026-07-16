@@ -40,7 +40,7 @@ toc: false
   <div class="project-list">
 
     <a href="nazari-vrp-brazil/" class="project-row">
-      <div class="project-row-title">Vehicle Routing with REINFORCE: A Zero-Shot Test on Real Delivery Data</div>
+      <div class="project-row-title">Vehicle Routing with REINFORCE (Part I): A Zero-Shot Test on Real Delivery Data</div>
       <div class="project-row-meta">
         <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; OR-Tools</span>
       </div>
@@ -48,6 +48,18 @@ toc: false
         Reproduces the Nazari et al. (2018) attention model for the Capacitated Vehicle Routing Problem —
         showing the REINFORCE baseline choice is architectural, not a hyperparameter, and quantifying a
         3,700x speed-for-quality trade-off against OR-Tools that becomes a 64% gap on real São Paulo delivery data.
+      </div>
+    </a>
+
+    <a href="nazari-vrp-sao-paulo/" class="project-row">
+      <div class="project-row-title">Per-Zone Vehicle Routing (Part II): Closing the Zero-Shot Gap on Real São Paulo Data</div>
+      <div class="project-row-meta">
+        <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; POMO</span>
+      </div>
+      <div class="project-row-desc">
+        Continues Part I by training the same model directly on one São Paulo zone's real customers —
+        cutting the zero-shot gap from 36.6% to 3.8% through per-zone training, a POMO learning signal,
+        and a free 2-opt cleanup, with one rejected hypothesis along the way.
       </div>
     </a>
 

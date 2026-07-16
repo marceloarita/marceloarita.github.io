@@ -43,7 +43,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-035ea5cfb3d65239cb7ef604642f4261.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-63098deb4f8353bac9e8f8b1ef08aac8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -169,7 +169,7 @@ ul.task-list li input[type="checkbox"] {
   <div class="project-list">
 
     <a href="nazari-vrp-brazil/" class="project-row">
-      <div class="project-row-title">Vehicle Routing with REINFORCE: A Zero-Shot Test on Real Delivery Data</div>
+      <div class="project-row-title">Vehicle Routing with REINFORCE (Part I): A Zero-Shot Test on Real Delivery Data</div>
       <div class="project-row-meta">
         <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; OR-Tools</span>
       </div>
@@ -177,6 +177,18 @@ ul.task-list li input[type="checkbox"] {
         Reproduces the Nazari et al. (2018) attention model for the Capacitated Vehicle Routing Problem —
         showing the REINFORCE baseline choice is architectural, not a hyperparameter, and quantifying a
         3,700x speed-for-quality trade-off against OR-Tools that becomes a 64% gap on real São Paulo delivery data.
+      </div>
+    </a>
+
+    <a href="nazari-vrp-sao-paulo/" class="project-row">
+      <div class="project-row-title">Per-Zone Vehicle Routing (Part II): Closing the Zero-Shot Gap on Real São Paulo Data</div>
+      <div class="project-row-meta">
+        <span>Python &nbsp;·&nbsp; PyTorch &nbsp;·&nbsp; POMO</span>
+      </div>
+      <div class="project-row-desc">
+        Continues Part I by training the same model directly on one São Paulo zone's real customers —
+        cutting the zero-shot gap from 36.6% to 3.8% through per-zone training, a POMO learning signal,
+        and a free 2-opt cleanup, with one rejected hypothesis along the way.
       </div>
     </a>
 

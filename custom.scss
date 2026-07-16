@@ -134,6 +134,19 @@ a:hover { text-decoration: underline; }
 
 .project-meta strong { color: #37352f; }
 
+/* ── Stat callout (pull-quote style) ── */
+.stat-callout {
+  margin: 1.25rem 0 1.75rem;
+  padding: 1rem 1.25rem;
+  background: #f7f7f5;
+  border-left: 3px solid #2e75cc;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #37352f;
+}
+
+.stat-callout strong { color: #37352f; }
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -233,4 +246,8 @@ figure img {
   border: 1px solid #ebebeb;
   border-radius: 4px;
   max-width: 100%;
+}
+
+.quarto-figure-center figcaption {
+  text-align: center;
 }

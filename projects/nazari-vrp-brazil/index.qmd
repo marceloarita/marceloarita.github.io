@@ -1,5 +1,5 @@
 ---
-title: "Vehicle Routing with REINFORCE: A Zero-Shot Test on Real Delivery Data"
+title: "Vehicle Routing with REINFORCE (Part I): A Zero-Shot Test on Real Delivery Data"
 page-layout: article
 toc: true
 toc-depth: 2
@@ -14,7 +14,7 @@ toc-depth: 2
 </div>
 ```
 
-*This page covers Part I of the project: reproducing Nazari et al. and putting it through a business-relevant stress test — speed vs. quality against a classical solver, then a zero-shot run on real São Paulo delivery data. Part II, training the model directly on São Paulo's own geography to close the gap this page exposes, will be a separate write-up once results land. Full technical detail — model code, training scripts, masking logic — is in the [GitHub repo](https://github.com/marceloarita/nazari-vrp-brazil).*
+*This page covers Part I of the project: reproducing Nazari et al. and putting it through a business-relevant stress test — speed vs. quality against a classical solver, then a zero-shot run on real São Paulo delivery data. [Part II](../nazari-vrp-sao-paulo/) trains the model directly on São Paulo's own geography and closes the gap this page exposes. Full technical detail — model code, training scripts, masking logic — is in the [GitHub repo](https://github.com/marceloarita/nazari-vrp-brazil).*
 
 ## TL;DR
 
@@ -112,7 +112,7 @@ The interesting parts of this project are two things a straight reimplementation
 - The REINFORCE baseline is an architectural decision, not a tuning knob — invisible at VRP10, decisive at VRP20.
 - A controllable ~9–20% gap on the training distribution and a 63.8% gap on real customers are both true of the same model — the difference is a precise measurement of what "trained on synthetic, uniform data" costs once it meets a real city.
 
-Closing that gap — training directly on São Paulo's own spatial distribution — is Part II of this work, and will get its own write-up once results land.
+Closing that gap — training directly on São Paulo's own spatial distribution — is the subject of **[Part II](../nazari-vrp-sao-paulo/)**, which takes the hardest zone from a 36.6% gap down to 3.8%.
 
 ---
 
